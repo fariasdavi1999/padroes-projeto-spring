@@ -1,35 +1,41 @@
 package one.digitalinnovation.gof.service.impl;
 
-import java.util.Optional;
-
+import one.digitalinnovation.gof.model.Cliente;
+import one.digitalinnovation.gof.model.Endereco;
+import one.digitalinnovation.gof.repository.ClienteRepository;
+import one.digitalinnovation.gof.repository.EnderecoRepository;
+import one.digitalinnovation.gof.service.ClienteService;
+import one.digitalinnovation.gof.service.dataprovider.api.ViaCepApiClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import one.digitalinnovation.gof.model.Cliente;
-import one.digitalinnovation.gof.model.ClienteRepository;
-import one.digitalinnovation.gof.model.Endereco;
-import one.digitalinnovation.gof.model.EnderecoRepository;
-import one.digitalinnovation.gof.service.ClienteService;
-import one.digitalinnovation.gof.service.ViaCepService;
+import java.util.Optional;
 
 /**
  * Implementação da <b>Strategy</b> {@link ClienteService}, a qual pode ser
  * injetada pelo Spring (via {@link Autowired}). Com isso, como essa classe é um
  * {@link Service}, ela será tratada como um <b>Singleton</b>.
- * 
+ *
  * @author falvojr
  */
 @Service
 public class ClienteServiceImpl implements ClienteService {
 
-	// Singleton: Injetar os componentes do Spring com @Autowired.
+	private final ClienteRepository clienteRepository;
+
+	private final EnderecoRepository enderecoRepository;
+
+	private final ViaCepApiClient viaCepService;
+
 	@Autowired
-	private ClienteRepository clienteRepository;
-	@Autowired
-	private EnderecoRepository enderecoRepository;
-	@Autowired
-	private ViaCepService viaCepService;
-	
+	private ClienteServiceImpl(ClienteRepository clienteRepository,
+	                           EnderecoRepository enderecoRepository,
+	                           ViaCepApiClient viaCepService) {
+		this.clienteRepository  = clienteRepository;
+		this.enderecoRepository = enderecoRepository;
+		this.viaCepService      = viaCepService;
+	}
+
 	// Strategy: Implementar os métodos definidos na interface.
 	// Facade: Abstrair integrações com subsistemas, provendo uma interface simples.
 
@@ -43,7 +49,12 @@ public class ClienteServiceImpl implements ClienteService {
 	public Cliente buscarPorId(Long id) {
 		// Buscar Cliente por ID.
 		Optional<Cliente> cliente = clienteRepository.findById(id);
-		return cliente.get();
+		if (cliente.isPresent())
+			return cliente.get();
+		else {
+			throw new IllegalArgumentException("Cliente não encontrado com ID: " + id);
+		}
+
 	}
 
 	@Override
